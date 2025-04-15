@@ -1,1 +1,3 @@
-{}
+{
+  "deploy-github-actions.plugin.name": "Deploy (GitHub Actions)"
+}

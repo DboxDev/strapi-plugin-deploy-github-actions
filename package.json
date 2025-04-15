@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.0.1",
   "keywords": [],
   "type": "commonjs",
   "exports": {
@@ -50,11 +50,11 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "strapi-plugin-deploy-github-actions",
+    "name": "deploy-github-actions",
     "displayName": "Deploy (GitHub Actions)",
-    "description": "Allows trigger github actions from Strapi UI"
+    "description": "Allows trigger GitHub Actions from Strapi UI"
   },
-  "name": "strapi-plugin-deploy-github-actions",
+  "name": "@dboxdev/strapi-plugin-deploy-github-actions",
   "description": "Allows trigger github actions from Strapi UI",
   "license": "MIT",
   "repository": {

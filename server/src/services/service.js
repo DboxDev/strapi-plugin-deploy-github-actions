@@ -1,6 +1,7 @@
 const service = ({ strapi }) => ({
-  getWelcomeMessage () {
-    return 'Welcome to Strapi 🚀'
+  getBuilds () {
+    const config = strapi.config.get('plugin::deploy-github-actions')
+    return config.builds
   }
 })
 
