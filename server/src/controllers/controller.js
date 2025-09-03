@@ -13,7 +13,7 @@ const controller = ({ strapi }) => ({
     for (const build of builds) {
       console.log(build)
       buildsPromises.push(
-        axios.get(`https://api.github.com/repos/${build.repository}/actions/workflows/${build.workflow}/runs?per_page=1`, {
+        axios.get(`https://api.github.com/repos/${build.repository}/actions/workflows/${build.workflow}/runs?branch=${build.ref}&per_page=1`, {
           headers: {
             Accept: 'application/vnd.github.v3+json',
             'USER-AGENT': 'STRAPI',
@@ -30,7 +30,7 @@ const controller = ({ strapi }) => ({
             } else {
               return {
                 name: build.name,
-                status: result.data.workflow_runs[0].status,
+                status: result.data.workflow_runs[0].conclusion || result.data.workflow_runs[0].status,
                 lastUpdate: result.data.workflow_runs[0].updated_at
               }
             }

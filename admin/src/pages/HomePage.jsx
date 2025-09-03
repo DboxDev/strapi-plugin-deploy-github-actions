@@ -39,6 +39,15 @@ const statusMapping = {
   unknown: 'unknown'
 }
 
+const repeatInterval = async (count, interval, callback) => {
+  let result
+  for (let i = 0; i < count; i++) {
+    await new Promise((resolve) => setTimeout(() => resolve(true), interval))
+    result = await callback()
+  }
+  return result
+}
+
 const StatusIcon = ({ status }) => {
   const icon = useMemo(() => {
     switch (statusMapping[status]) {
@@ -88,12 +97,10 @@ const HomePage = () => {
         return false
       })
       .then(() => console.log('post finished'))
-      .then(async () => await new Promise((resolve) => setTimeout(() => {
-        console.log('resolving after timeout')
-        resolve(true)
-      }, 5000)))
-      .then(async () => await fetchClient.get(`/${PLUGIN_ID}/builds`))
-      .then(({ data }) => setBuilds(data.builds || []))
+      .then(() => repeatInterval(10, 1000, async () => {
+        const { data } = await fetchClient.get(`/${PLUGIN_ID}/builds`)
+        setBuilds(data.builds || [])
+      }))
   }, [fetchClient])
 
   return (
