@@ -71,15 +71,33 @@ const HomePage = () => {
   const [builds, setBuilds] = useState([])
   const fetchClient = useFetchClient()
   const { toggleNotification } = useNotification()
+  const [documentVisible, setDocumentVisible] = useState(true)
 
   useEffect(() => {
+    const visibilityHandler = () => {
+      setDocumentVisible(!document.hidden)
+    }
+    visibilityHandler()
+    document.addEventListener('visibilitychange', visibilityHandler)
+    return () => document.removeEventListener('visibilitychange', visibilityHandler)
+  }, [])
+
+  const fetchBuilds = useCallback(() => {
     fetchClient.get(`/${PLUGIN_ID}/builds`)
       .then(({ data }) => setBuilds(data.builds || []))
       .catch(error => {
         console.log('Can\'t fetch builds with error', error)
         setBuilds([])
       })
-  }, [setBuilds, fetchClient])
+  }, [fetchClient])
+
+  useEffect(() => {
+    if (documentVisible) {
+      const interval = setInterval(() => fetchBuilds(), 10000)
+      fetchBuilds()
+      return () => clearInterval(interval)
+    }
+  }, [fetchBuilds, documentVisible])
 
   const triggerBuild = useCallback((build) => {
     fetchClient.post(`/${PLUGIN_ID}/builds`, { build: build.name })
@@ -97,7 +115,7 @@ const HomePage = () => {
         return false
       })
       .then(() => console.log('post finished'))
-      .then(() => repeatInterval(10, 1000, async () => {
+      .then(() => repeatInterval(7, 1000, async () => {
         const { data } = await fetchClient.get(`/${PLUGIN_ID}/builds`)
         setBuilds(data.builds || [])
       }))

@@ -1,0 +1,49 @@
+name: Publish on tag
+
+on:
+  push:
+    tags: ['v*.*.*'] # Trigger only when pushing a version tag (created by `npm version`)
+
+permissions:
+  packages: write   # required to publish to GitHub Packages
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all history and tags (useful for changelogs or semantic-release in the future)
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: '@dboxdev'
+          # always-auth: true # enable if you need authentication for installing private dependencies
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # - name: Run ESLint (lint) and StandardJS (code style)
+      #   run: npm run lint
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Build package
+        run: npm run build
+
+      - name: Verifying package
+        run: npm run verify
+
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --ignore-scripts
+
+      - name: Package version
+        run: node -p "require('./package.json').version"

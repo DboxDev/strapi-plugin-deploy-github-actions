@@ -11,37 +11,42 @@ const controller = ({ strapi }) => ({
     const buildsPromises = []
 
     for (const build of builds) {
-      console.log(build)
+      // console.log(build)
       buildsPromises.push(
-        axios.get(`https://api.github.com/repos/${build.repository}/actions/workflows/${build.workflow}/runs?branch=${build.ref}&per_page=1`, {
-          headers: {
-            Accept: 'application/vnd.github.v3+json',
-            'USER-AGENT': 'STRAPI',
-            Authorization: `token ${build.token}`
-          }
-        })
-          .then(result => {
-            console.log({ build, data: result.data.workflow_runs })
-            if (!result.data.workflow_runs || !result.data.workflow_runs.length) {
+        (!build.repository || !build.workflow || !build.ref || !build.token)
+          ? ({
+              name: build.name,
+              status: 'unknown'
+            })
+          : axios.get(`https://api.github.com/repos/${build.repository}/actions/workflows/${build.workflow}/runs?branch=${build.ref}&per_page=1`, {
+            headers: {
+              Accept: 'application/vnd.github.v3+json',
+              'USER-AGENT': 'STRAPI',
+              Authorization: `token ${build.token}`
+            }
+          })
+            .then(result => {
+              // console.log({ build, data: result.data.workflow_runs })
+              if (!result.data.workflow_runs || !result.data.workflow_runs.length) {
+                return {
+                  name: build.name,
+                  status: 'unknown'
+                }
+              } else {
+                return {
+                  name: build.name,
+                  status: result.data.workflow_runs[0].conclusion || result.data.workflow_runs[0].status,
+                  lastUpdate: result.data.workflow_runs[0].updated_at
+                }
+              }
+            })
+            .catch(error => {
+              console.error(`Can't get workflow '${build.name}' status: ${error.message}`)
               return {
                 name: build.name,
                 status: 'unknown'
               }
-            } else {
-              return {
-                name: build.name,
-                status: result.data.workflow_runs[0].conclusion || result.data.workflow_runs[0].status,
-                lastUpdate: result.data.workflow_runs[0].updated_at
-              }
-            }
-          })
-          .catch(error => {
-            console.error(`Can't get workflow '${build.name}' status: ${error.message}`)
-            return {
-              name: build.name,
-              status: 'unknown'
-            }
-          })
+            })
       )
     }
 
@@ -58,8 +63,8 @@ const controller = ({ strapi }) => ({
       .service('service')
       .getBuilds()
 
-    const build = builds[0]
-    return axios.post(`https://api.github.com/repos/${build.repository}/actions/workflows/${build.workflow}/dispatches`, { ref: build.ref }, {
+    const build = builds.find(build => build.name === ctx.request.body.build)
+    return axios.post(`https://api.github.com/repos/${build.repository}/actions/workflows/${build.workflow}/dispatches`, { ref: build.ref, inputs: build.inputs }, {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         'USER-AGENT': 'STRAPI',
